@@ -32,3 +32,21 @@ localhost:5672
 5672 is the default port for AMQP protocol connections.
 
 This tells the application to connect to a RabbitMQ server running locally, authenticate as guest, and use the standard messaging port.
+
+### Screenshot of Queue Spike
+
+![RabbitMQ Queue Spike](chart.png)
+
+---
+
+### Why is the total number of queued messages like that?
+
+In my case, the queue temporarily reached **6 messages**.
+
+Here’s why:
+
+- I ran the publisher a bit more than once (each run sends 5 messages).
+- Because the subscriber takes **1 second per message**, messages build up in the queue when the publisher is faster than the consumer.
+- The graph shows:
+  - A **flat line at 6** in "Queued messages", indicating the number of events waiting.
+  - Then a drop as the subscriber processed messages one-by-one.
