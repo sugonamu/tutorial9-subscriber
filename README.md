@@ -50,3 +50,51 @@ Here’s why:
 - The graph shows:
   - A **flat line at 6** in "Queued messages", indicating the number of events waiting.
   - Then a drop as the subscriber processed messages one-by-one.
+
+## Running at Least Three Subscribers
+
+To test the performance under load, I ran **three instances of the subscriber** simultaneously in different terminal windows. Then, I triggered the publisher multiple times in quick succession.
+
+This setup allowed multiple subscribers to consume messages in parallel.
+
+---
+
+### Screenshot (Multiple Subscribers)
+
+![RabbitMQ Queue Decrease Faster with 3 Subscribers](3subs.png)
+![CommandPrompt](/3cmd.png)
+---
+
+### Reflection
+
+As seen in the graph, although the queue briefly spiked to **6 messages**, it **dropped to 0 much faster** compared to when only one subscriber was running. This shows how running multiple consumers speeds up the processing of queued events.
+
+**Why this happens:**
+
+- Each subscriber processes one message at a time with a 1-second delay (due to `thread::sleep`).
+- With 3 subscribers, up to 3 messages can be processed in parallel every second.
+- This reduces the time required to drain the queue significantly.
+
+---
+
+### Room for improvement
+
+- Currently, the publisher uses repeated `_ = p.publish_event(...)` lines.
+- This can be improved using a loop to reduce redundancy:
+
+```rust
+for (id, name) in [
+    ("1", "Amir"),
+    ("2", "Budi"),
+    ("3", "Cica"),
+    ("4", "Dira"),
+    ("5", "Emir"),
+] {
+    _ = p.publish_event(
+        "user_created".to_owned(),
+        UserCreatedEventMessage {
+            user_id: id.to_string(),
+            user_name: format!("2306199775-{}", name),
+        },
+    );
+}
